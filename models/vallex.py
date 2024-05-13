@@ -847,7 +847,8 @@ def topk_sampling(logits, top_k=10, top_p=1.0, temperature=1.0):
     # Top-p/top-k filtering
     logits = top_k_top_p_filtering(logits, top_k=top_k, top_p=top_p)
     # Sample
-    token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
+    # token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
+    token = torch.argmax(F.softmax(logits, dim=-1), dim=-1, keepdim=True)
     logprobs = F.log_softmax(logits.float(), dim=-1)
     current_logprobs = logprobs[torch.arange(logprobs.shape[0]), token.squeeze(1)]
     return token, current_logprobs
