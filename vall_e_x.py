@@ -174,11 +174,7 @@ def make_prompt_cus(name, audio_path):
     start = time.time()
     print(f"name {name} audio_path {audio_path}")
     ### Use given transcript
-    try:
-        make_prompt(name=name, audio_prompt_path=audio_path)
-    except Exception as e:
-        print(f"exception {e}")
-
+    make_prompt(name=name, audio_prompt_path=audio_path)
     duration = time.time() - start
     print(f"make_prompt took {duration} ms")
 
@@ -202,6 +198,7 @@ if __name__ == '__main__':
     # torch.manual_seed(1)
     logging.basicConfig(level=logging.DEBUG)
     name = "obama"
+    print(f"current_folder {current_folder}")
     make_prompt_cus(name, f"{current_folder}/resources/cut_obama_11.wav")
     genrate_audio_cus("Turn left at the next intersection and continue straight for 500 meters.", name,
                    f"{current_folder}/paimon_cloned.wav")
