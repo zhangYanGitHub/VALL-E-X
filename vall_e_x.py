@@ -202,4 +202,4 @@ if __name__ == '__main__':
     make_prompt_cus(name, f"{current_folder}/resources/cut_obama_11.wav")
     genrate_audio_cus("Turn left at the next intersection and continue straight for 500 meters.", name,
                    f"{current_folder}/paimon_cloned.wav")
-    # cover_torch_script("Turn left at the next intersection and continue straight for 500 meters.", prompt=name)
+    cover_torch_script("Turn left at the next intersection and continue straight for 500 meters.", prompt=name)
