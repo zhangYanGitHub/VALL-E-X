@@ -99,7 +99,7 @@ def preload_models_cus():
 
     # Encodec
     codec = AudioTokenizer(device)
-    print(f"preload_models codec {codec}")
+    logging.debug(f"preload_models codec {codec}")
 
     vocos = Vocos.from_pretrained('charactr/vocos-encodec-24khz').to(device)
 
@@ -140,7 +140,7 @@ def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
 
     enroll_x_lens = text_prompts.shape[-1]
     logging.info(f"synthesize text: {text}")
-    print(f"synthesize text: {text}")
+    logging.debug(f"synthesize text: {text}")
     phone_tokens, langs = text_tokenizer.tokenize(text=f"_{text}".strip())
     text_tokens, text_tokens_lens = text_collater(
         [
@@ -149,7 +149,7 @@ def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
     )
     text_tokens = torch.cat([text_prompts, text_tokens], dim=-1)
     text_tokens_lens += enroll_x_lens
-    print(f"enroll_x_lens {enroll_x_lens.__class__}")
+    logging.debug(f"enroll_x_lens {enroll_x_lens.__class__}")
     #    text_tokens.to(device),
     #         text_tokens_lens.to(device),
     #         audio_prompts,
@@ -165,18 +165,18 @@ def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
     os.makedirs(f"{current_folder}/model/vall-e-x")
     output_path = f"{current_folder}/model/vall-e-x/model.ptl"
 
-    print(f"output torch script path {output_path}")
+    logging.debug(f"output torch script path {output_path}")
     traced_model._save_for_lite_interpreter(output_path)
     pass
 
 
 def make_prompt_cus(name, audio_path):
     start = time.time()
-    print(f"name {name} audio_path {audio_path}")
+    logging.debug(f"name {name} audio_path {audio_path}")
     ### Use given transcript
     make_prompt(name=name, audio_prompt_path=audio_path)
     duration = time.time() - start
-    print(f"make_prompt took {duration} ms")
+    logging.debug(f"make_prompt took {duration} ms")
 
 
 def genrate_audio_cus(text, name, out_audio_path):
@@ -189,7 +189,7 @@ def genrate_audio_cus(text, name, out_audio_path):
     text_prompt = text
     audio_array = generate_audio(text_prompt, prompt=name)
     duration = time.time() - start
-    print(f"generate_audio took {duration} ms")
+    logging.debug(f"generate_audio took {duration} ms")
 
     write_wav(out_audio_path, SAMPLE_RATE, audio_array)
 
@@ -198,8 +198,8 @@ if __name__ == '__main__':
     # torch.manual_seed(1)
     logging.basicConfig(level=logging.DEBUG)
     name = "obama"
-    # print(f"current_folder {current_folder}")
-    # make_prompt_cus(name, f"{current_folder}/resources/cut_obama_11.wav")
-    # genrate_audio_cus("Turn left at the next intersection and continue straight for 500 meters.", name,
-    #                f"{current_folder}/paimon_cloned.wav")
+    logging.debug(f"current_folder {current_folder}")
+    make_prompt_cus(name, f"{current_folder}/resources/cut_obama_11.wav")
+    genrate_audio_cus("Turn left at the next intersection and continue straight for 500 meters.", name,
+                   f"{current_folder}/paimon_cloned.wav")
     cover_torch_script("Turn left at the next intersection and continue straight for 500 meters.", prompt=name)
