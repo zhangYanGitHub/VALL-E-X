@@ -833,28 +833,6 @@ def top_k_top_p_filtering(
     return logits
 
 
-def deterministic_multinomial(probabilities, num_samples):
-    # 假设probabilities是一个包含概率的1D张量，并且概率和为1
-    # 确保probabilities是一个概率分布
-    assert torch.allclose(probabilities.sum(), torch.tensor(1.0))
-
-    # 计算累积概率
-    cum_probabilities = torch.cumsum(probabilities, dim=0)
-
-    # 确保cum_probabilities[-1]是一个标量
-    end_point = cum_probabilities[-1].item()
-
-    # 创建一个等距的网格用于抽样
-    sample_points = torch.linspace(0, end_point, num_samples + 1, dtype=torch.float32)
-
-    # 查找每个样本点落在哪个累积概率区间内
-    indices = torch.searchsorted(cum_probabilities, sample_points[:-1], side='right') - 1
-
-    # 确保没有超出索引范围
-    indices = torch.clamp(indices, min=0, max=cum_probabilities.size(0) - 1)
-
-    # 返回样本索引
-    return indices.long()
 
 def topk_sampling(logits, top_k=10, top_p=1.0, temperature=1.0):
     # temperature: (`optional`) float
@@ -870,11 +848,11 @@ def topk_sampling(logits, top_k=10, top_p=1.0, temperature=1.0):
     # Top-p/top-k filtering
     logits = top_k_top_p_filtering(logits, top_k=top_k, top_p=top_p)
     # Sample
-    token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
+    # token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
     # token = torch.argmax(F.softmax(logits, dim=-1), dim=-1, keepdim=True)
-    # token = torch.argmax(logits, dim=-1, keepdim=True)
+    token = torch.argmax(logits, dim=-1, keepdim=True)
 
-    print(f"token {token}")
+    # print(f"token {token}")
     logprobs = F.log_softmax(logits.float(), dim=-1)
     current_logprobs = logprobs[torch.arange(logprobs.shape[0]), token.squeeze(1)]
     return token, current_logprobs

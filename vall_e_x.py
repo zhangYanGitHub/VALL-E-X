@@ -139,8 +139,7 @@ def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
         lang_pr = lang if lang != 'mix' else 'en'
 
     enroll_x_lens = text_prompts.shape[-1]
-    logging.info(f"synthesize text: {text}")
-    logging.debug(f"synthesize text: {text}")
+    logging.info(f">>>> synthesize text: {text}")
     phone_tokens, langs = text_tokenizer.tokenize(text=f"_{text}".strip())
     text_tokens, text_tokens_lens = text_collater(
         [
@@ -149,7 +148,8 @@ def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
     )
     text_tokens = torch.cat([text_prompts, text_tokens], dim=-1)
     text_tokens_lens += enroll_x_lens
-    logging.debug(f"enroll_x_lens {enroll_x_lens.__class__}")
+    logging.info(f"enroll_x_lens {enroll_x_lens}")
+    logging.info(f"text_tokens_lens.to(device) {text_tokens_lens.to(device)}")
     #    text_tokens.to(device),
     #         text_tokens_lens.to(device),
     #         audio_prompts,
@@ -160,7 +160,7 @@ def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
     #         text_language=langs if accent == "no-accent" else lang,
     traced_model = torch.jit.trace_module(model, {
         "inference": (
-        (text_tokens.to(device), text_tokens_lens.to(device), audio_prompts, torch.tensor(enroll_x_lens),))},check_trace=False)
+        (text_tokens.to(device), text_tokens_lens.to(device), audio_prompts, torch.tensor(enroll_x_lens),))})
     # traced_script_module_optimized = optimize_for_mobile(traced_model)
     os.makedirs(f"{current_folder}/model/vall-e-x")
     output_path = f"{current_folder}/model/vall-e-x/model.ptl"
