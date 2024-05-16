@@ -160,7 +160,7 @@ def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
     #         text_language=langs if accent == "no-accent" else lang,
     traced_model = torch.jit.trace_module(model, {
         "inference": (
-        (text_tokens.to(device), text_tokens_lens.to(device), audio_prompts, torch.tensor(enroll_x_lens),))})
+        (text_tokens.to(device), text_tokens_lens.to(device), audio_prompts, torch.tensor(enroll_x_lens),))},check_trace=False)
     # traced_script_module_optimized = optimize_for_mobile(traced_model)
     os.makedirs(f"{current_folder}/model/vall-e-x")
     output_path = f"{current_folder}/model/vall-e-x/model.ptl"

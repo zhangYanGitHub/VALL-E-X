@@ -53,23 +53,23 @@ class VALLF(nn.Module):
     """
 
     def __init__(
-        self,
-        d_model: int,
-        nhead: int,
-        num_layers: int,
-        norm_first: bool = True,
-        add_prenet: bool = False,
-        decoder_cls: Union[
-            nn.TransformerDecoder, nn.TransformerEncoder
-        ] = nn.TransformerDecoder,
-        decoder_layer_cls: Union[
-            TransformerDecoderLayer, TransformerEncoderLayer
-        ] = TransformerDecoderLayer,
-        prefix_mode: int = 0,
-        share_embedding: bool = True,
-        nar_scale_factor: float = 1.0,
-        prepend_bos: bool = True,
-        num_quantizers: int = 8,
+            self,
+            d_model: int,
+            nhead: int,
+            num_layers: int,
+            norm_first: bool = True,
+            add_prenet: bool = False,
+            decoder_cls: Union[
+                nn.TransformerDecoder, nn.TransformerEncoder
+            ] = nn.TransformerDecoder,
+            decoder_layer_cls: Union[
+                TransformerDecoderLayer, TransformerEncoderLayer
+            ] = TransformerDecoderLayer,
+            prefix_mode: int = 0,
+            share_embedding: bool = True,
+            nar_scale_factor: float = 1.0,
+            prepend_bos: bool = True,
+            num_quantizers: int = 8,
     ):
         """
         Args:
@@ -278,7 +278,7 @@ class VALLF(nn.Module):
                     yield param
 
     def stage_named_parameters(
-        self, stage: int = 1
+            self, stage: int = 1
     ) -> Iterator[Tuple[str, nn.Parameter]]:
         assert stage > 0
         if stage == 1:
@@ -341,10 +341,10 @@ class VALLF(nn.Module):
                 for b in range(codes.shape[0]):
                     start = self.rng.randint(0, y_lens[b].item() - prefix_len)
                     y_prompts_codes.append(
-                        torch.clone(codes[b, start : start + prefix_len])
+                        torch.clone(codes[b, start: start + prefix_len])
                     )
                     codes[
-                        b, start : start + prefix_len, nar_stage
+                    b, start: start + prefix_len, nar_stage
                     ] = NUM_AUDIO_TOKENS
                 y_prompts_codes = torch.stack(y_prompts_codes, dim=0)
             else:
@@ -365,34 +365,34 @@ class VALLF(nn.Module):
         return y_emb, prefix_len
 
     def forward(
-        self,
-        x: torch.Tensor,
-        x_lens: torch.Tensor,
-        y: Union[torch.Tensor, PromptedFeatures],
-        y_lens: Union[torch.Tensor, PromptedFeatures],
-        reduction: str = "sum",
-        train_stage: int = 0,
-        **kwargs,
+            self,
+            x: torch.Tensor,
+            x_lens: torch.Tensor,
+            y: Union[torch.Tensor, PromptedFeatures],
+            y_lens: Union[torch.Tensor, PromptedFeatures],
+            reduction: str = "sum",
+            train_stage: int = 0,
+            **kwargs,
     ) -> Tuple[torch.Tensor, Union[torch.Tensor, None]]:
         raise NotImplementedError
 
     def inference(
-        self,
-        x: torch.Tensor,
-        x_lens: torch.Tensor,
-        y: torch.Tensor,
-        enroll_x_lens: Union[torch.Tensor, None] = None,
-        top_k: int = -100,
-        temperature: float = 1.0,
+            self,
+            x: torch.Tensor,
+            x_lens: torch.Tensor,
+            y: torch.Tensor,
+            enroll_x_lens: Union[torch.Tensor, None] = None,
+            top_k: int = -100,
+            temperature: float = 1.0,
     ) -> torch.Tensor:
         raise NotImplementedError
 
     def visualize(
-        self,
-        predicts: Tuple[torch.Tensor],
-        batch: Dict[str, Union[List, torch.Tensor]],
-        output_dir: str,
-        limit: int = 4,
+            self,
+            predicts: Tuple[torch.Tensor],
+            batch: Dict[str, Union[List, torch.Tensor]],
+            output_dir: str,
+            limit: int = 4,
     ) -> None:
         raise NotImplementedError
 
@@ -403,16 +403,16 @@ class VALLE(VALLF):
     """
 
     def __init__(
-        self,
-        d_model: int,
-        nhead: int,
-        num_layers: int,
-        norm_first: bool = True,
-        add_prenet: bool = False,
-        prefix_mode: int = 0,
-        share_embedding: bool = True,
-        nar_scale_factor: float = 1.0,
-        **kwargs,
+            self,
+            d_model: int,
+            nhead: int,
+            num_layers: int,
+            norm_first: bool = True,
+            add_prenet: bool = False,
+            prefix_mode: int = 0,
+            share_embedding: bool = True,
+            nar_scale_factor: float = 1.0,
+            **kwargs,
     ):
         """
         Args:
@@ -445,29 +445,30 @@ class VALLE(VALLF):
         self.nar_language_embedding = TokenEmbedding(d_model, len(self.language_ID))
 
     def forward(
-        self,
-        x: torch.Tensor,
-        x_lens: torch.Tensor,
-        y: Union[torch.Tensor, PromptedFeatures],
-        y_lens: Union[torch.Tensor, PromptedFeatures],
-        reduction: str = "sum",
-        train_stage: int = 0,
-        **kwargs,
+            self,
+            x: torch.Tensor,
+            x_lens: torch.Tensor,
+            y: Union[torch.Tensor, PromptedFeatures],
+            y_lens: Union[torch.Tensor, PromptedFeatures],
+            reduction: str = "sum",
+            train_stage: int = 0,
+            **kwargs,
     ):
         raise NotImplementedError
+
     def inference(
-        self,
-        x: torch.Tensor,
-        x_lens: torch.Tensor,
-        y: torch.Tensor,
-        enroll_x_lens: torch.Tensor,
-        top_k: int = -100,
-        temperature: float = 1.0,
-        prompt_language: str = 'en',
-        text_language: str = 'en',
-        best_of: int = 1,
-        length_penalty: float = 1.0,
-        return_worst: bool = False,
+            self,
+            x: torch.Tensor,
+            x_lens: torch.Tensor,
+            y: torch.Tensor,
+            enroll_x_lens: torch.Tensor,
+            top_k: int = -100,
+            temperature: float = 1.0,
+            prompt_language: str = 'en',
+            text_language: str = 'en',
+            best_of: int = 1,
+            length_penalty: float = 1.0,
+            return_worst: bool = False,
     ) -> torch.Tensor:
         """
         Args:
@@ -548,7 +549,6 @@ class VALLE(VALLF):
                 [x_attn_mask_pad, y_attn_mask], dim=0
             ).to(y.device)
 
-
             if use_kv_caching and kv_cache is not None:
                 xy_pos = xy_pos[:, [-1]]
             else:
@@ -573,8 +573,8 @@ class VALLE(VALLF):
             samples[y[:, -1] == NUM_AUDIO_TOKENS] = NUM_AUDIO_TOKENS
             completed = (samples[:, -1] == NUM_AUDIO_TOKENS).all()
             if (
-                completed
-                or (y.shape[1] - prompts.shape[1]) > x_lens.max() * 16
+                    completed
+                    or (y.shape[1] - prompts.shape[1]) > x_lens.max() * 16
             ):
                 if prompts.shape[1] == y.shape[1]:
                     raise SyntaxError(
@@ -597,13 +597,13 @@ class VALLE(VALLF):
 
             y = torch.concat([y, samples], dim=1)
 
-        codes = [y[:, prefix_len + int(self.ar_audio_prepend_bos) :]]
+        codes = [y[:, prefix_len + int(self.ar_audio_prepend_bos):]]
         if self.num_quantizers == 1:
             return torch.stack(codes, dim=-1)
 
         # Non-AR Decoders
         y_emb = self.nar_audio_embeddings[0](
-            y[:, int(self.ar_audio_prepend_bos) :]
+            y[:, int(self.ar_audio_prepend_bos):]
         )
 
         if self.prefix_mode in [2, 4]:  # Exclude enrolled_phonemes
@@ -612,7 +612,7 @@ class VALLE(VALLF):
             text = torch.concat(
                 [
                     text[:, :1],
-                    text[:, enrolled_len - 1 :],
+                    text[:, enrolled_len - 1:],
                 ],
                 dim=1,
             )
@@ -633,10 +633,10 @@ class VALLE(VALLF):
 
         if self.prefix_mode == 0:
             for i, (predict_layer, embedding_layer) in enumerate(
-                zip(
-                    self.nar_predict_layers,
-                    self.nar_audio_embeddings[1:],
-                )
+                    zip(
+                        self.nar_predict_layers,
+                        self.nar_audio_embeddings[1:],
+                    )
             ):
                 y_pos = self.nar_audio_prenet(y_emb)
                 y_pos = self.nar_audio_position(y_pos)
@@ -645,7 +645,7 @@ class VALLE(VALLF):
                 xy_dec, _ = self.nar_decoder(
                     (xy_pos, self.nar_stage_embeddings[i].weight)
                 )
-                logits = predict_layer(xy_dec[:, text_len + prefix_len :])
+                logits = predict_layer(xy_dec[:, text_len + prefix_len:])
 
                 samples = torch.argmax(logits, dim=-1)
                 codes.append(samples)
@@ -662,10 +662,10 @@ class VALLE(VALLF):
                 )
 
             for i, (predict_layer, embedding_layer) in enumerate(
-                zip(
-                    self.nar_predict_layers,
-                    self.nar_audio_embeddings[1:],
-                )
+                    zip(
+                        self.nar_predict_layers,
+                        self.nar_audio_embeddings[1:],
+                    )
             ):
                 y_pos = self.nar_audio_prenet(y_emb)
                 y_pos = self.nar_audio_position(y_pos)
@@ -674,7 +674,7 @@ class VALLE(VALLF):
                 xy_dec, _ = self.nar_decoder(
                     (xy_pos, self.nar_stage_embeddings[i].weight)
                 )
-                logits = predict_layer(xy_dec[:, text_len + prefix_len :])
+                logits = predict_layer(xy_dec[:, text_len + prefix_len:])
 
                 samples = torch.argmax(logits, dim=-1)
                 codes.append(samples)
@@ -686,10 +686,10 @@ class VALLE(VALLF):
         return torch.stack(codes, dim=-1)
 
     def continual(
-        self,
-        x: torch.Tensor,
-        x_lens: torch.Tensor,
-        y: torch.Tensor,
+            self,
+            x: torch.Tensor,
+            x_lens: torch.Tensor,
+            y: torch.Tensor,
     ) -> torch.Tensor:
         """
         Args:
@@ -734,10 +734,10 @@ class VALLE(VALLF):
 
         if self.prefix_mode == 0:
             for i, (predict_layer, embedding_layer) in enumerate(
-                zip(
-                    self.nar_predict_layers,
-                    self.nar_audio_embeddings[1:],
-                )
+                    zip(
+                        self.nar_predict_layers,
+                        self.nar_audio_embeddings[1:],
+                    )
             ):
                 y_pos = self.nar_audio_position(y_emb)
                 y_pos = self.nar_audio_prenet(y_pos)
@@ -746,7 +746,7 @@ class VALLE(VALLF):
                 xy_dec, _ = self.nar_decoder(
                     (xy_pos, self.nar_stage_embeddings[i].weight)
                 )
-                logits = predict_layer(xy_dec[:, text_len + prefix_len :])
+                logits = predict_layer(xy_dec[:, text_len + prefix_len:])
 
                 samples = torch.argmax(logits, dim=-1)
                 codes.append(samples)
@@ -763,10 +763,10 @@ class VALLE(VALLF):
                 )
 
             for i, (predict_layer, embedding_layer) in enumerate(
-                zip(
-                    self.nar_predict_layers,
-                    self.nar_audio_embeddings[1:],
-                )
+                    zip(
+                        self.nar_predict_layers,
+                        self.nar_audio_embeddings[1:],
+                    )
             ):
                 y_pos = self.nar_audio_prenet(y_emb)
                 y_pos = self.nar_audio_position(y_pos)
@@ -775,7 +775,7 @@ class VALLE(VALLF):
                 xy_dec, _ = self.nar_decoder(
                     (xy_pos, self.nar_stage_embeddings[i].weight)
                 )
-                logits = predict_layer(xy_dec[:, text_len + prefix_len :])
+                logits = predict_layer(xy_dec[:, text_len + prefix_len:])
 
                 samples = torch.argmax(logits, dim=-1)
                 codes.append(samples)
@@ -789,7 +789,7 @@ class VALLE(VALLF):
 
 # https://github.com/microsoft/unilm/blob/master/xtune/src/transformers/modeling_utils.py
 def top_k_top_p_filtering(
-    logits, top_k=0, top_p=1.0, filter_value=-float("Inf"), min_tokens_to_keep=1
+        logits, top_k=0, top_p=1.0, filter_value=-float("Inf"), min_tokens_to_keep=1
 ):
     """Filter a distribution of logits using top-k and/or nucleus (top-p) filtering
     Args:
@@ -821,8 +821,8 @@ def top_k_top_p_filtering(
             sorted_indices_to_remove[..., :min_tokens_to_keep] = 0
         # Shift the indices to the right to keep also the first token above the threshold
         sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[
-            ..., :-1
-        ].clone()
+                                            ..., :-1
+                                            ].clone()
         sorted_indices_to_remove[..., 0] = 0
 
         # scatter sorted tensors to original indexing
@@ -832,6 +832,29 @@ def top_k_top_p_filtering(
         logits[indices_to_remove] = filter_value
     return logits
 
+
+def deterministic_multinomial(probabilities, num_samples):
+    # 假设probabilities是一个包含概率的1D张量，并且概率和为1
+    # 确保probabilities是一个概率分布
+    assert torch.allclose(probabilities.sum(), torch.tensor(1.0))
+
+    # 计算累积概率
+    cum_probabilities = torch.cumsum(probabilities, dim=0)
+
+    # 确保cum_probabilities[-1]是一个标量
+    end_point = cum_probabilities[-1].item()
+
+    # 创建一个等距的网格用于抽样
+    sample_points = torch.linspace(0, end_point, num_samples + 1, dtype=torch.float32)
+
+    # 查找每个样本点落在哪个累积概率区间内
+    indices = torch.searchsorted(cum_probabilities, sample_points[:-1], side='right') - 1
+
+    # 确保没有超出索引范围
+    indices = torch.clamp(indices, min=0, max=cum_probabilities.size(0) - 1)
+
+    # 返回样本索引
+    return indices.long()
 
 def topk_sampling(logits, top_k=10, top_p=1.0, temperature=1.0):
     # temperature: (`optional`) float
@@ -847,8 +870,11 @@ def topk_sampling(logits, top_k=10, top_p=1.0, temperature=1.0):
     # Top-p/top-k filtering
     logits = top_k_top_p_filtering(logits, top_k=top_k, top_p=top_p)
     # Sample
-    # token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
-    token = torch.argmax(F.softmax(logits, dim=-1), dim=-1, keepdim=True)
+    token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
+    # token = torch.argmax(F.softmax(logits, dim=-1), dim=-1, keepdim=True)
+    # token = torch.argmax(logits, dim=-1, keepdim=True)
+
+    print(f"token {token}")
     logprobs = F.log_softmax(logits.float(), dim=-1)
     current_logprobs = logprobs[torch.arange(logprobs.shape[0]), token.squeeze(1)]
     return token, current_logprobs
