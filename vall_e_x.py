@@ -287,7 +287,7 @@ def quantization_q():
     logging.debug(f">> trace_module")
     trace_model = torch.jit.trace_module(quantized_model,{"inference":example_inputs},check_trace=False)
     #保存量化后的模型为文件
-    quantized_model_path = f"{current_folder}/model/vall-e-x/model.ptl"
+    quantized_model_path = f"{current_folder}/model/vall-e-x/model_quantized.ptl"
     logging.debug(f">> save model")
     torch.jit.save(trace_model, quantized_model_path)
     pass
