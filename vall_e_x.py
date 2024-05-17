@@ -263,7 +263,7 @@ def genrate_audio_cus(text, name, out_audio_path):
 
 def quantization_q():
     model_path = f"{current_folder}/model/vall-e-x/model.ptl"
-    print(f"load model")
+    logging.debug(f"load model")
 
     text_tokens, text_tokens_lens, audio_prompts, enroll_x_lens = get_inputs(
         "Turn left at the next intersection and continue straight for 500 meters.", "obama")
@@ -272,23 +272,23 @@ def quantization_q():
     vall_model = model
     vall_model.eval()
     # 执行动态量化
-    print(f">> quantize_dynamic")
+    logging.debug(f">> quantize_dynamic")
 
     # 打印每一个可以量化的层的名称和类型
     for name, layer in vall_model.named_modules():
         if isinstance(layer, (nn.Linear, nn.LSTM, nn.GRU, nn.Conv2d, nn.Conv1d, nn.Embedding)):
-            print(f"可量化层: {name}, 类型: {type(layer)}")
+            logging.debug(f"可量化层: {name}, 类型: {type(layer)}")
 
     quantized_model = torch.quantization.quantize_dynamic(
         vall_model,
         {nn.Linear, nn.LSTM, nn.GRU, nn.Conv2d, nn.Conv1d},  # 模型中的所有层类型
         dtype=torch.qint8
     )
-    print(f">> trace_module")
+    logging.debug(f">> trace_module")
     trace_model = torch.jit.trace_module(quantized_model,{"inference":example_inputs},check_trace=False)
     #保存量化后的模型为文件
     quantized_model_path = f"{current_folder}/model/vall-e-x/model.ptl"
-    print(f">> save model")
+    logging.debug(f">> save model")
     torch.jit.save(trace_model, quantized_model_path)
     pass
 
@@ -297,8 +297,8 @@ if __name__ == '__main__':
     torch.manual_seed(1)
     logging.basicConfig(level=logging.DEBUG)
     name = "obama"
-    # logging.debug(f"current_folder {current_folder}")
-    # make_prompt_cus(name, f"{current_folder}/resources/cut_obama_11.wav")
+    logging.debug(f"current_folder {current_folder}")
+    make_prompt_cus(name, f"{current_folder}/resources/cut_obama_11.wav")
     # genrate_audio_cus("Turn left at the next intersection and continue straight for 500 meters.", name,
     #                f"{current_folder}/paimon_cloned.wav")
     # cover_torch_script("Turn left at the next intersection and continue straight for 500 meters.", prompt=name)
