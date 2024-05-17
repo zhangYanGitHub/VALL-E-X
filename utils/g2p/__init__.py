@@ -1,4 +1,6 @@
 """ from https://github.com/keithito/tacotron """
+import logging
+
 import utils.g2p.cleaners
 from utils.g2p.symbols import symbols
 from tokenizers import Tokenizer
@@ -15,10 +17,13 @@ class PhonemeBpeTokenizer:
   def tokenize(self, text):
     # 1. convert text to phoneme
     phonemes, langs = _clean_text(text, ['cje_cleaners'])
+    logging.info(f"> [tokenize] langs {langs} phonemes {phonemes}")
     # 2. replace blank space " " with "_"
     phonemes = phonemes.replace(" ", "_")
+    logging.info(f"> [tokenize] phonemes {phonemes}")
     # 3. tokenize phonemes
     phoneme_tokens = self.tokenizer.encode(phonemes).ids
+    logging.info(f"> [tokenize] phoneme_tokens {phoneme_tokens}")
     assert(len(phoneme_tokens) == len(langs))
     if not len(phoneme_tokens):
       raise ValueError("Empty text is given")

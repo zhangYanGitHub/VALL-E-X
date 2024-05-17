@@ -21,4 +21,3 @@ nltk
 sudachipy
 sudachidict_core
 vocos
-ffmpeg-python

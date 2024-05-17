@@ -454,7 +454,13 @@ class VALLE(VALLF):
             train_stage: int = 0,
             **kwargs,
     ):
-        raise NotImplementedError
+        # raise NotImplementedError
+        print(f"x {x}")
+        print(f"x_lens {x_lens}")
+        print(f"y {y}")
+        print(f"y_lens {y_lens}")
+        print(f"reduction {reduction}")
+        print(f"train_stage {train_stage}")
 
     def inference(
             self,
@@ -848,9 +854,7 @@ def topk_sampling(logits, top_k=10, top_p=1.0, temperature=1.0):
     # Top-p/top-k filtering
     logits = top_k_top_p_filtering(logits, top_k=top_k, top_p=top_p)
     # Sample
-    # token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1)
-    # token = torch.argmax(F.softmax(logits, dim=-1), dim=-1, keepdim=True)
-    token = torch.argmax(logits, dim=-1, keepdim=True)
+    token = torch.multinomial(F.softmax(logits, dim=-1), num_samples=1,replacement=False)
 
     # print(f"token {token}")
     logprobs = F.log_softmax(logits.float(), dim=-1)
