@@ -99,6 +99,53 @@ def preload_models_cus():
     vocos = Vocos.from_pretrained('charactr/vocos-encodec-24khz').to(device)
 
 
+def get_inputs(text, prompt=None, language='auto', accent='no-accent'):
+    preload_models_cus()
+    global model, codec, vocos, text_tokenizer, text_collater
+    text = text.replace("\n", "").strip(" ")
+    # detect language
+    if language == "auto":
+        language = langid.classify(text)[0]
+    lang_token = lang2token[language]
+    lang = token2lang[lang_token]
+    text = lang_token + text + lang_token
+
+    # load prompt
+    if prompt is not None:
+        prompt_path = prompt
+        if not os.path.exists(prompt_path):
+            prompt_path = "./presets/" + prompt + ".npz"
+        if not os.path.exists(prompt_path):
+            prompt_path = "./customs/" + prompt + ".npz"
+        if not os.path.exists(prompt_path):
+            raise ValueError(f"Cannot find prompt {prompt}")
+        prompt_data = np.load(prompt_path)
+        audio_prompts = prompt_data['audio_tokens']
+        text_prompts = prompt_data['text_tokens']
+        lang_pr = prompt_data['lang_code']
+        lang_pr = code2lang[int(lang_pr)]
+
+        # numpy to tensor
+        audio_prompts = torch.tensor(audio_prompts).type(torch.int32).to(device)
+        text_prompts = torch.tensor(text_prompts).type(torch.int32)
+    else:
+        audio_prompts = torch.zeros([1, 0, NUM_QUANTIZERS]).type(torch.int32).to(device)
+        text_prompts = torch.zeros([1, 0]).type(torch.int32)
+        lang_pr = lang if lang != 'mix' else 'en'
+
+    enroll_x_lens = text_prompts.shape[-1]
+    logging.info(f">>>> synthesize text: {text}")
+    phone_tokens, langs = text_tokenizer.tokenize(text=f"_{text}".strip())
+    text_tokens, text_tokens_lens = text_collater(
+        [
+            phone_tokens
+        ]
+    )
+    text_tokens = torch.cat([text_prompts, text_tokens], dim=-1)
+    text_tokens_lens += enroll_x_lens
+    return text_tokens, text_tokens_lens, audio_prompts, enroll_x_lens
+
+
 def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
     preload_models_cus()
     global model, codec, vocos, text_tokenizer, text_collater
@@ -166,60 +213,43 @@ def cover_torch_script(text, prompt=None, language='auto', accent='no-accent'):
     pass
 
 
-def get_inputs(text, prompt=None, language='auto', accent='no-accent'):
-    preload_models_cus()
-    global model, codec, vocos, text_tokenizer, text_collater
-    text = text.replace("\n", "").strip(" ")
-    # detect language
-    if language == "auto":
-        language = langid.classify(text)[0]
-    lang_token = lang2token[language]
-    lang = token2lang[lang_token]
-    text = lang_token + text + lang_token
-
-    # load prompt
-    if prompt is not None:
-        prompt_path = prompt
-        if not os.path.exists(prompt_path):
-            prompt_path = "./presets/" + prompt + ".npz"
-        if not os.path.exists(prompt_path):
-            prompt_path = "./customs/" + prompt + ".npz"
-        if not os.path.exists(prompt_path):
-            raise ValueError(f"Cannot find prompt {prompt}")
-        prompt_data = np.load(prompt_path)
-        audio_prompts = prompt_data['audio_tokens']
-        text_prompts = prompt_data['text_tokens']
-        lang_pr = prompt_data['lang_code']
-        lang_pr = code2lang[int(lang_pr)]
-
-        # numpy to tensor
-        audio_prompts = torch.tensor(audio_prompts).type(torch.int32).to(device)
-        text_prompts = torch.tensor(text_prompts).type(torch.int32)
-    else:
-        audio_prompts = torch.zeros([1, 0, NUM_QUANTIZERS]).type(torch.int32).to(device)
-        text_prompts = torch.zeros([1, 0]).type(torch.int32)
-        lang_pr = lang if lang != 'mix' else 'en'
-
-    enroll_x_lens = text_prompts.shape[-1]
-    logging.info(f">>>> synthesize text: {text}")
-    phone_tokens, langs = text_tokenizer.tokenize(text=f"_{text}".strip())
-    text_tokens, text_tokens_lens = text_collater(
-        [
-            phone_tokens
-        ]
-    )
-    text_tokens = torch.cat([text_prompts, text_tokens], dim=-1)
-    text_tokens_lens += enroll_x_lens
-    return text_tokens, text_tokens_lens, audio_prompts, enroll_x_lens
+# def cover_torch_script_d(text, prompt=None, language='auto', accent='no-accent'):
+#     preload_models_cus()
+#     text_tokens, text_tokens_lens, audio_prompts, enroll_x_lens = get_inputs(
+#         "Turn left at the next intersection and continue straight for 500 meters.", "obama")
+#     example_inputs = (
+#         text_tokens.to(device), text_tokens_lens.to(device), audio_prompts, torch.tensor(enroll_x_lens))  # 示例输入
+#
+#     q_model = torch.load(f"{current_folder}/model/vall-e-x/model_quantized.ptl")
+#
+#     for name, layer in q_model.named_modules():
+#         if isinstance(layer, (nn.Linear, nn.LSTM, nn.GRU, nn.Conv2d, nn.Conv1d, nn.Embedding)):
+#             logging.debug(f"可量化层: {name}, 类型: {type(layer)}")
+#
+#     #
+#     for name, param in q_model.named_parameters():
+#         print(f"Parameter: {name}, Data Type: {param.dtype}")
+#     output_path = f"{current_folder}/model/vall-e-x/model_d.onnx"
+#     torch.onnx.export(q_model, example_inputs, output_path, opset_version=11)
+#     # traced_model = torch.jit.trace_module(q_model, {
+#     #     "inference": (
+#     #         (text_tokens.to(device), text_tokens_lens.to(device), audio_prompts, torch.tensor(enroll_x_lens),))},
+#     #                                       check_trace=False)
+#     # traced_script_module_optimized = optimize_for_mobile(traced_model)
+#     # os.makedirs(f"{current_folder}/model/vall-e-x")
+#     output_path = f"{current_folder}/model/vall-e-x/model_d.ptl"
+#
+#     logging.debug(f"output torch script path {output_path}")
+#     # torch.jit.save(traced_model, output_path)
+#     pass
 
 
-def use_torch_script(text, prompt=None, language='auto', accent='no-accent'):
+def use_torch_script(model_path, text, prompt=None, language='auto', accent='no-accent'):
     text_tokens, text_tokens_lens, audio_prompts, enroll_x_lens = get_inputs(text, prompt, language)
     logging.info(f"enroll_x_lens {enroll_x_lens}")
     logging.info(f"text_tokens_lens.to(device) {text_tokens_lens.to(device)}")
 
-    model_path = f"{current_folder}/model/vall-e-x/model_quantized.ptl"
-    traced_model = torch.jit.load(model_path)
+    traced_model = torch.load(model_path)
     start = time.time()
     with torch.no_grad():
         traced_model.eval()
@@ -267,7 +297,8 @@ def quantization_q():
 
     text_tokens, text_tokens_lens, audio_prompts, enroll_x_lens = get_inputs(
         "Turn left at the next intersection and continue straight for 500 meters.", "obama")
-    example_inputs = (text_tokens.to(device), text_tokens_lens.to(device), audio_prompts, torch.tensor(enroll_x_lens))  # 示例输入
+    example_inputs = (
+        text_tokens.to(device), text_tokens_lens.to(device), audio_prompts, torch.tensor(enroll_x_lens))  # 示例输入
 
     vall_model = model
     vall_model.eval()
@@ -284,11 +315,14 @@ def quantization_q():
         {nn.Linear, nn.LSTM, nn.GRU, nn.Conv2d, nn.Conv1d},  # 模型中的所有层类型
         dtype=torch.qint8
     )
+    quantized_model.eval()
     logging.debug(f">> trace_module")
-    trace_model = torch.jit.trace_module(quantized_model,{"inference":example_inputs},check_trace=False)
-    #保存量化后的模型为文件
+
+    trace_model = torch.jit.trace_module(quantized_model, {"inference": example_inputs}, check_trace=False)
+    # 保存量化后的模型为文件
     quantized_model_path = f"{current_folder}/model/vall-e-x/model_quantized.ptl"
     logging.debug(f">> save model")
+    # torch.save(quantized_model, quantized_model_path)
     torch.jit.save(trace_model, quantized_model_path)
     pass
 
@@ -301,8 +335,11 @@ if __name__ == '__main__':
     make_prompt_cus(name, f"{current_folder}/resources/cut_obama_11.wav")
     # genrate_audio_cus("Turn left at the next intersection and continue straight for 500 meters.", name,
     #                f"{current_folder}/paimon_cloned.wav")
+    # cover_torch_script_d("Turn left at the next intersection and continue straight for 500 meters.", prompt=name)
     # cover_torch_script("Turn left at the next intersection and continue straight for 500 meters.", prompt=name)
-    # use_torch_script("Turn left at the next intersection and continue straight for 500 meters.", prompt=name)
+
+    model_path = f"{current_folder}/model/vall-e-x/model_quantized.ptl"
+    # use_torch_script(model_path,"Turn left at the next intersection and continue straight for 500 meters.", prompt=name)
     quantization_q()
 
     # quantized_model_path = f"{current_folder}/model/vall-e-x/model_quantized.ptl"
