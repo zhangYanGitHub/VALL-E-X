@@ -36,8 +36,8 @@ from utils.g2p import PhonemeBpeTokenizer
 from macros import *
 
 device = torch.device("cpu")
-if torch.cuda.is_available():
-    device = torch.device("cuda", 0)
+# if torch.cuda.is_available():
+    # device = torch.device("cuda", 0)
 # if torch.backends.mps.is_available():
 #     device = torch.device("mps")
 url = 'https://huggingface.co/Plachta/VALL-E-X/resolve/main/vallex-checkpoint.pt'
