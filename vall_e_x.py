@@ -310,17 +310,21 @@ def quantization_q():
         if isinstance(layer, (nn.Linear, nn.LSTM, nn.GRU, nn.Conv2d, nn.Conv1d, nn.Embedding)):
             logging.debug(f"可量化层: {name}, 类型: {type(layer)}")
 
-    quantized_model = torch.quantization.quantize_dynamic(
+    torch.quantization.quantize_dynamic(
         vall_model,
-        {nn.Linear, nn.LSTM, nn.GRU, nn.Conv2d, nn.Conv1d},  # 模型中的所有层类型
-        dtype=torch.qint8
+        {nn.Linear
+           # , nn.LSTM, nn.GRU, nn.Conv2d, nn.Conv1d
+         },  # 模型中的所有层类型
+        dtype=torch.qint8,
+        inplace=True
     )
-    quantized_model.eval()
+    vall_model.eval()
     logging.debug(f">> trace_module")
 
-    trace_model = torch.jit.trace_module(quantized_model, {"inference": example_inputs}, check_trace=False)
+    # trace_model = torch.jit.trace(quantized_model, example_inputs)
+    trace_model = torch.jit.trace_module(vall_model, {"inference": example_inputs}, check_trace=False)
     # 保存量化后的模型为文件
-    quantized_model_path = f"{current_folder}/model/vall-e-x/model_quantized.ptl"
+    quantized_model_path = f"{current_folder}/model/vall-e-x/model——quantized.ptl"
     logging.debug(f">> save model")
     # torch.save(quantized_model, quantized_model_path)
     torch.jit.save(trace_model, quantized_model_path)
